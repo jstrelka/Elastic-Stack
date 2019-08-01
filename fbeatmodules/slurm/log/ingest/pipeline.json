@@ -1,14 +1,35 @@
-{
-  "description": "Filebeat Module Pipeline for parsing slurm logs (J.Strelka),
-  "processors": [{
-    "grok": {
-      "field": "message",
-      "patterns":[
-	"%{TIMESTAMP_ISO8601:slurm.job.endtime}] %{GREEDYDATA:slurm.job.process} JobId=%{GREEDYDATA:slurm.job.id} WEXITSTATUS %{INT:slurm.job.exit.code}",
-	"%{TIMESTAMP_ISO8601:slurm.job.endtime}] %{GREEDYDATA:slurm.job.process} JobId=%{GREEDYDATA:slurm.job.id} %{WORD} %{INT:slurm.system.exit.code}",
-        "%{TIMESTAMP_ISO8601:slurm.job.endtime}] %{GREEDYDATA:slurm.job.process} Allocate JobId=%{GREEDYDATA:slurm.job.id} NodeList=%{GREEDYDATA:slurm.job.nodelist} #CPUs=%{NUMBER:slurm.job.cpu.count} Partition=%{WORD:slurm.job.partition}",        "%{TIMESTAMP_ISO8601:slurm.job.starttime}] %{GREEDYDATA:slurm.job.process} Configuration for JobId=%{GREEDYDATA:slurm.job.id} is complete"
-		],
- 	        "ignore_missing": true
-	     }
-}]
+{    
+    "description" : "Filebeat Module Pipeline for parsing slurm logs (J.Strelka)",
+    "processors" : [
+      {
+        "grok" : {
+          "field" : "message",
+          "patterns" : [
+            """\[%{TIMESTAMP_ISO8601:slurm.job.eventtime}\] %{GREEDYDATA:slurm.job.process} JobId=%{GREEDYDATA:slurm.job.id} WEXITSTATUS %{INT:slurm.job.exit.code}""",
+            """\[%{TIMESTAMP_ISO8601:slurm.job.eventtime}\] %{GREEDYDATA:slurm.job.process} JobId=%{GREEDYDATA:slurm.job.id} %{WORD} %{INT:slurm.system.exit.code}""",
+            """\[%{TIMESTAMP_ISO8601:slurm.job.eventtime}\] %{GREEDYDATA:slurm.job.process} Allocate JobId=%{GREEDYDATA:slurm.job.id} NodeList=%{GREEDYDATA:slurm.job.nodelist} #CPUs=%{NUMBER:slurm.job.cpu.count} Partition=%{WORD:slurm.job.partition}""",
+            """\[%{TIMESTAMP_ISO8601:slurm.job.eventtime}\] %{GREEDYDATA:slurm.job.process} _slurm_rpc_allocate_resources JobId=%{GREEDYDATA:slurm.job.id} NodeList=%{GREEDYDATA:slurm.job.nodelist} %{WORD}""",
+            """\[%{TIMESTAMP_ISO8601:slurm.job.eventtime}\] %{GREEDYDATA:slurm.job.process} Configuration for JobId=%{GREEDYDATA:slurm.job.id} is complete"""
+          ]
+        }
+      },
+      {
+        "date" : {
+          "field" : "slurm.job.eventtime",
+          "target_field" : "@timestamp",
+          "formats" : [
+            "MMM  d HH:mm:ss",
+            "MMM dd HH:mm:ss",
+            "ISO8601"
+          ],
+          "timezone" : "America/Denver",
+          "ignore_failure" : true
+        }
+      }
+    ],
+    "on_failure" : [
+      {
+        "drop" : { }
+      }
+    ]
 }
